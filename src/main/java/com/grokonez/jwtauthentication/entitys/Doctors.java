@@ -1,5 +1,7 @@
 package com.grokonez.jwtauthentication.entitys;
 
+import com.grokonez.jwtauthentication.model.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -33,8 +36,17 @@ public class Doctors {
 	private Category category;
 	
 	
-	
-	
+	@OneToOne 
+	private User user;
+	 
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
 
 	public Doctors(Long id, String fullname, String address, String email, String phone, String about,
 			Category category) {
