@@ -2,6 +2,7 @@ package com.grokonez.jwtauthentication.controller;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.grokonez.jwtauthentication.entitys.Category;
 import com.grokonez.jwtauthentication.entitys.Doctors;
+import com.grokonez.jwtauthentication.entitys.Notifications;
+import com.grokonez.jwtauthentication.entitys.Reservation;
+import com.grokonez.jwtauthentication.message.request.BookDoctorModel;
 import com.grokonez.jwtauthentication.message.request.CategoryModel;
 import com.grokonez.jwtauthentication.message.request.DoctorModel;
 import com.grokonez.jwtauthentication.message.response.JsonRes;
@@ -25,14 +29,22 @@ import com.grokonez.jwtauthentication.model.RoleName;
 import com.grokonez.jwtauthentication.model.User;
 import com.grokonez.jwtauthentication.repository.CategoriesRepository;
 import com.grokonez.jwtauthentication.repository.DoctorsRepository;
+import com.grokonez.jwtauthentication.repository.NotificationsRepository;
+import com.grokonez.jwtauthentication.repository.ReservationRepository;
 import com.grokonez.jwtauthentication.repository.RoleRepository;
 import com.grokonez.jwtauthentication.repository.UserRepository;
+import com.grokonez.jwtauthentication.security.jwt.JwtProvider;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/doctors")
 public class DoctorsController {
+
+	@Autowired
+    JwtProvider jwtProvider;
 
 	
 	@Autowired
@@ -41,6 +53,16 @@ public class DoctorsController {
 	
 	@Autowired
 	private CategoriesRepository categoriesRepository;
+	
+	
+	@Autowired
+	private NotificationsRepository notificationsRepository;
+	
+	@Autowired
+	private ReservationRepository reservationRepository;
+	
+	
+	
 	
 
 	@GetMapping("/list")
@@ -113,6 +135,64 @@ public class DoctorsController {
 		Category c = this.categoriesRepository.findById(category).get();
 		
 		return this.doctorsRepository.findByFullnameContainingIgnoreCaseAndCategory(name,c);
+	}
+	
+	
+	
+	
+	@GetMapping("/get-Doctor-reservations")
+	public List<Reservation> getDoctorReervations(HttpServletRequest req  ){
+		 
+		Optional<User> current;
+        String token = req.getHeader("authorization").replace("Bearer " ,""); 
+        String username=this.jwtProvider.getUserNameFromJwtToken(token);
+        current=this.userRepository.findByUsername(username);
+         
+        
+        
+		Doctors doc = this.doctorsRepository.findByUser(current.get());
+		
+		
+		return this.reservationRepository.findByDoctor( doc );
+	}
+	
+	
+	
+	@PostMapping("/book/doctor/{id}")
+	public ResponseEntity<?> bookDoctor(HttpServletRequest req, @PathVariable long id, @RequestBody BookDoctorModel model){
+	 
+		Optional<User> current;
+        String token = req.getHeader("authorization").replace("Bearer " ,""); 
+        String username=this.jwtProvider.getUserNameFromJwtToken(token);
+        current=this.userRepository.findByUsername(username);
+         
+		
+		Reservation reservation = new Reservation();
+		
+		Doctors doc = this.doctorsRepository.findById(id).get();
+
+		reservation.setDoctor(doc);
+		reservation.setStatus(0);
+		reservation.setUser(current.get());
+		reservation.setReservationDate(model.getReservationDate());
+		reservation.setPrivateNote(model.getPrivateNote());
+		
+		this.reservationRepository.save(reservation);
+		 
+		
+		// send notification
+		Notifications notif = new Notifications(); 
+		notif.setUser(doc.getUser());
+		notif.setTitle("New Booking Request");
+		notif.setMessage("New Booking Request From ".concat(current.get().getName()));
+		notif.setSeen(false);
+		
+		this.notificationsRepository.save(notif);
+		
+		
+		
+		JsonRes res = new JsonRes("Reservation created successfully",true); 
+		return ResponseEntity.ok(res);
 	}
 	
 	

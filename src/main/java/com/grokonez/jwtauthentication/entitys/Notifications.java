@@ -1,5 +1,6 @@
 package com.grokonez.jwtauthentication.entitys;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
  
@@ -26,7 +27,7 @@ public class Notifications {
 	private User user;
 
 
-	private Date adddate;
+	private LocalDateTime  createdAt = LocalDateTime.now();
 	
 	private boolean isSeen;
 
@@ -62,13 +63,7 @@ public class Notifications {
 		this.user = user;
 	}
 
-	public Date getAdddate() {
-		return adddate;
-	}
-
-	public void setAdddate(Date adddate) {
-		this.adddate = adddate;
-	}
+ 
 
 	public boolean isSeen() {
 		return isSeen;
@@ -84,9 +79,16 @@ public class Notifications {
 		this.id = id;
 		this.message = message;
 		this.title = title;
-		this.user = user;
-		this.adddate = adddate;
+		this.user = user; 
 		this.isSeen = isSeen;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
 	}
 
 	public Notifications() {
