@@ -13,11 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.grokonez.jwtauthentication.entitys.Doctors;
 import com.grokonez.jwtauthentication.entitys.Reservation;
+import com.grokonez.jwtauthentication.entitys.ServiceCategory;
+import com.grokonez.jwtauthentication.entitys.ServicesProviderlLocation;
 import com.grokonez.jwtauthentication.model.User;
 import com.grokonez.jwtauthentication.repository.CategoriesRepository;
 import com.grokonez.jwtauthentication.repository.DoctorsRepository;
 import com.grokonez.jwtauthentication.repository.NotificationsRepository;
 import com.grokonez.jwtauthentication.repository.ReservationRepository;
+import com.grokonez.jwtauthentication.repository.ServiceCategoryRepository;
+import com.grokonez.jwtauthentication.repository.ServicesProviderlLocationRepository;
 import com.grokonez.jwtauthentication.repository.UserRepository;
 import com.grokonez.jwtauthentication.security.jwt.JwtProvider;
 
@@ -49,6 +53,16 @@ public class AppUtilitiesController {
 	
 	
 	@Autowired
+	private ServiceCategoryRepository serviceCategoryRepository;
+	
+	@Autowired
+	private ServicesProviderlLocationRepository servicesProviderlLocationRepository;
+	
+	
+	
+	
+	
+	@Autowired
     UserRepository userRepository;
 
 
@@ -61,4 +75,22 @@ public class AppUtilitiesController {
         current=this.userRepository.findByUsername(username); 
 		return this.reservationRepository.findByUser( current.get() );
 	}
+	
+	
+	@GetMapping("/categories-services-list")
+	public List<ServiceCategory> getServiceCategory(  ){ 
+	 
+		return this.serviceCategoryRepository.findAll();
+	}
+	
+	
+	@GetMapping("/categories-services-location-list")
+	public List<ServicesProviderlLocation> servicesProviderlLocationLists(  ){ 
+	 
+		return this.servicesProviderlLocationRepository.findAll();
+	}
+	
+	
+	
+	
 }

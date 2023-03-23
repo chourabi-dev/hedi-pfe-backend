@@ -36,6 +36,18 @@ public class Doctors {
 	private Category category;
 	
 	
+	@ManyToOne 
+	private ServicesProviderlLocation location;
+	
+	
+	public ServicesProviderlLocation getLocation() {
+		return location;
+	}
+
+	public void setLocation(ServicesProviderlLocation location) {
+		this.location = location;
+	}
+
 	@OneToOne 
 	private User user;
 	 

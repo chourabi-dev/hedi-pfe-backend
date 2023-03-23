@@ -18,7 +18,18 @@ public class DoctorModel {
 	
 	private String password;
 	
+	private long location;
+	
+	
 	 
+	public long getLocation() {
+		return location;
+	}
+
+	public void setLocation(long location) {
+		this.location = location;
+	}
+
 	public String getUsername() {
 		return username;
 	}

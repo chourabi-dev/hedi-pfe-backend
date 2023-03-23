@@ -32,6 +32,7 @@ import com.grokonez.jwtauthentication.repository.DoctorsRepository;
 import com.grokonez.jwtauthentication.repository.NotificationsRepository;
 import com.grokonez.jwtauthentication.repository.ReservationRepository;
 import com.grokonez.jwtauthentication.repository.RoleRepository;
+import com.grokonez.jwtauthentication.repository.ServicesProviderlLocationRepository;
 import com.grokonez.jwtauthentication.repository.UserRepository;
 import com.grokonez.jwtauthentication.security.jwt.JwtProvider;
 
@@ -90,6 +91,10 @@ public class DoctorsController {
     UserRepository userRepository;
     
     
+    @Autowired
+    ServicesProviderlLocationRepository servicesProviderlLocationRepository;
+    
+    
     
 	@PostMapping("/add")
 	public ResponseEntity<?> add( @RequestBody DoctorModel model ){
@@ -101,6 +106,10 @@ public class DoctorsController {
 		d.setPhone(model.getPhone());
 		d.setAddress(model.getAddress());
 		d.setCategory( this.categoriesRepository.findById(model.getCategory()).get()  );
+		
+		
+		
+		d.setLocation(  this.servicesProviderlLocationRepository.findById(model.getLocation()).get()  );
 		
 		
 		// create user for the doctor
@@ -195,6 +204,32 @@ public class DoctorsController {
 		return ResponseEntity.ok(res);
 	}
 	
+	
+	
+	@GetMapping("/reservation/change-status/{id}")
+	public ResponseEntity<?> bookDoctor(@PathVariable long id, int status){
+	 
+		Reservation reservation = this.reservationRepository.findById(id).get();
+		
+		reservation.setStatus(status);
+		
+		this.reservationRepository.save(reservation);
+		 
+		
+		// send notification
+		Notifications notif = new Notifications(); 
+		notif.setUser(reservation.getUser());
+		notif.setTitle("Booking Request");
+		notif.setMessage( status == 1 ? "Your request to visit the doctor is approved":"Your request to visit the doctor is refused." ); // 1 accept 2 refuse
+		notif.setSeen(false);
+		
+		this.notificationsRepository.save(notif);
+		
+		
+		
+		JsonRes res = new JsonRes("Reservation created successfully",true); 
+		return ResponseEntity.ok(res);
+	}
 	
 	
 	
