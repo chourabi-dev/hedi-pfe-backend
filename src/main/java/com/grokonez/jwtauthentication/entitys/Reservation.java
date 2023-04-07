@@ -1,14 +1,17 @@
 package com.grokonez.jwtauthentication.entitys;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.grokonez.jwtauthentication.model.User;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -41,8 +44,38 @@ public class Reservation {
 	private Doctors doctor;
 	
 	
+	@OneToMany(mappedBy="reservation")
+	private List<ServiceBooking> ServiceBookings;
+	
+	
+	
+	
+	
+	public List<ServiceBooking> getServiceBookings() {
+		return ServiceBookings;
+	}
+
+	public void setServiceBookings(List<ServiceBooking> serviceBookings) {
+		ServiceBookings = serviceBookings;
+	}
+
 	private int status = 0;
 	
+	
+	
+	@Column( name="arrived" , nullable=true )
+	private int arrived = 0;
+	
+	
+	
+	public int getArrived() {
+		return arrived;
+	}
+
+	public void setArrived(int arrived) {
+		this.arrived = arrived;
+	}
+
 	private String privateNote;
 
 	public Long getId() {

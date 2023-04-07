@@ -17,11 +17,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.grokonez.jwtauthentication.entitys.Doctors;
+import com.grokonez.jwtauthentication.entitys.Notifications;
 import com.grokonez.jwtauthentication.entitys.Reservation;
+import com.grokonez.jwtauthentication.entitys.ServiceBooking;
 import com.grokonez.jwtauthentication.entitys.ServiceCategory;
 import com.grokonez.jwtauthentication.entitys.ServiceProvider;
 import com.grokonez.jwtauthentication.entitys.ServicesProviderlLocation;
 import com.grokonez.jwtauthentication.message.request.DoctorModel;
+import com.grokonez.jwtauthentication.message.request.ServiceBookingModel;
 import com.grokonez.jwtauthentication.message.request.ServiceProviderModel;
 import com.grokonez.jwtauthentication.message.response.JsonRes;
 import com.grokonez.jwtauthentication.model.Role;
@@ -32,6 +35,7 @@ import com.grokonez.jwtauthentication.repository.DoctorsRepository;
 import com.grokonez.jwtauthentication.repository.NotificationsRepository;
 import com.grokonez.jwtauthentication.repository.ReservationRepository;
 import com.grokonez.jwtauthentication.repository.RoleRepository;
+import com.grokonez.jwtauthentication.repository.ServiceBookingRepository;
 import com.grokonez.jwtauthentication.repository.ServiceCategoryRepository;
 import com.grokonez.jwtauthentication.repository.ServiceProviderRepository;
 import com.grokonez.jwtauthentication.repository.ServicesProviderlLocationRepository;
@@ -72,6 +76,10 @@ public class AppUtilitiesController {
 	private ServicesProviderlLocationRepository servicesProviderlLocationRepository;
 	
 	
+	@Autowired
+	private ServiceBookingRepository serviceBookingRepository;
+	
+	
 	  @Autowired
 	  private  PasswordEncoder encoder;
 	    
@@ -85,6 +93,8 @@ public class AppUtilitiesController {
 	    
 	    @Autowired
 	    private  ServiceProviderRepository serviceProviderRepository;
+	    
+	  
 	    
 	
 	 
@@ -182,6 +192,130 @@ public class AppUtilitiesController {
 			return ResponseEntity.ok(this.serviceProviderRepository.findByLocation(locationEntity));
 		}
 		
- 
+		
+		
+		
+		
+		@PostMapping("/add-service-to-reservation") 
+		public ResponseEntity<?> addServiceProvider( @RequestBody ServiceBookingModel model ){
+			Reservation  reservation = this.reservationRepository.findById(model.getReservation()).get();
+			
+			ServiceProvider service = this.serviceProviderRepository.findById(model.getService()).get();
+			
+			
+			// check 
+			
+			if(this.serviceBookingRepository.existsByServiceAndReservation(service, reservation)) {
+
+				JsonRes res = new JsonRes("Reservation already made",false); 
+				return ResponseEntity.ok(res);
+			}else {
+				// make reservation !!
+				
+				ServiceBooking tmp =new ServiceBooking();
+				
+				tmp.setReservation(reservation);
+				tmp.setService(service);
+				tmp.setReservationDate(model.getReservationDate());
+				tmp.setDescreption(model.getDescreption());
+				
+				this.serviceBookingRepository.save(tmp);
+				
+				
+				// notif service provider !!
+				
+				// send notification
+				Notifications notif = new Notifications(); 
+				notif.setUser(service.getUser());
+				notif.setTitle("New Booking Request");
+				notif.setMessage("A new doctor reservation is made in your town and a client need you ".concat( reservation.getUser().getName() ));
+				notif.setSeen(false);
+				
+				this.notificationsRepository.save(notif);
+				
+				
+				 
+				JsonRes res = new JsonRes("Service booking saved successfully.",true); 
+				return ResponseEntity.ok(res);
+			}
+			
+		}
+		
+		
+		
+		@GetMapping("/service-providers-reservations") 
+		public ResponseEntity<?> getservicesprovidersReservations( HttpServletRequest req    ){
+			
+			Optional<User> current;
+	        String token = req.getHeader("authorization").replace("Bearer " ,""); 
+	        String username=this.jwtProvider.getUserNameFromJwtToken(token);
+	        current=this.userRepository.findByUsername(username); 
+
+	        
+	        ServiceProvider service = this.serviceProviderRepository.findByUser(current.get());
+	        
+	        
+			 
+			return ResponseEntity.ok(this.serviceBookingRepository.findByService( service ));
+		}
+		
+		
+		@GetMapping("/get-booked-service-by-reservation/{id}") 
+		public ResponseEntity<?> getservicesprovidersReservations( HttpServletRequest req,@PathVariable long id    ){
+			
+			Optional<User> current;
+	        String token = req.getHeader("authorization").replace("Bearer " ,""); 
+	        String username=this.jwtProvider.getUserNameFromJwtToken(token);
+	        current=this.userRepository.findByUsername(username); 
+
+	        
+	        Reservation tmp = this.reservationRepository.findById(id).get();
+	        
+	       
+			 
+			return ResponseEntity.ok( this.serviceBookingRepository.findByReservation(tmp) );
+		}
+		
+		
+		
+		@GetMapping("/close-service-booking/{id}") 
+		public ResponseEntity<?> closeServiceBooking(  @PathVariable long id    ){
+			 
+	        
+			ServiceBooking tmp = this.serviceBookingRepository.findById(id).get();
+	        
+			tmp.setStatus(1);
+			
+			this.serviceBookingRepository.save(tmp);
+			 
+			JsonRes res = new JsonRes("Service booking saved successfully.",true); 
+			return ResponseEntity.ok(res);
+		}
+		
+		
+		
+		@GetMapping("/close-reservation/{id}") 
+		public ResponseEntity<?> closeReservation(  @PathVariable long id    ){
+			 
+			Reservation tmp = this.reservationRepository.findById(id).get();
+		        
+			 tmp.setArrived(1); // closed !!
+			 
+			 this.reservationRepository.save(tmp);
+			 
+			JsonRes res = new JsonRes("Resarvation closed successfully.",true); 
+			return ResponseEntity.ok(res);
+		}
+		
+		
+		@GetMapping("/get-all-reservations") 
+		public ResponseEntity<?> getReservations(     ){ 
+			return ResponseEntity.ok(this.reservationRepository.findAll());
+		}
+		
+		
+		
+		 
+			
 	
 }

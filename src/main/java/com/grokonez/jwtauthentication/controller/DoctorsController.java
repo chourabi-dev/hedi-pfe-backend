@@ -182,6 +182,7 @@ public class DoctorsController {
 
 		reservation.setDoctor(doc);
 		reservation.setStatus(0);
+		reservation.setArrived(0); 
 		reservation.setUser(current.get());
 		reservation.setReservationDate(model.getReservationDate());
 		reservation.setPrivateNote(model.getPrivateNote());
